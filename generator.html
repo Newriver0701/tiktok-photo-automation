@@ -30,7 +30,8 @@ body {
 
 button,
 textarea,
-select {
+select,
+input {
   font: inherit;
 }
 
@@ -45,7 +46,8 @@ select {
 
 .panel,
 .preview,
-.output {
+.output,
+.rendered {
   background: #fffdfa;
   border: 1px solid #ded8cf;
   border-radius: 8px;
@@ -101,6 +103,34 @@ h1 {
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 14px;
+}
+
+.uploads {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid #ded8cf;
+  border-radius: 8px;
+  background: #f8f5ef;
+}
+
+.upload-row {
+  display: grid;
+  gap: 6px;
+}
+
+.upload-row label {
+  color: #383838;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.file-input {
+  width: 100%;
+  min-height: 36px;
+  color: #333;
+  font-size: 13px;
 }
 
 .button {
@@ -182,6 +212,10 @@ h1 {
   padding: 18px;
 }
 
+.rendered {
+  padding: 18px;
+}
+
 .code-output {
   display: block;
   width: 100%;
@@ -195,6 +229,49 @@ h1 {
   font-family: Consolas, "SFMono-Regular", monospace;
   font-size: 12px;
   line-height: 1.45;
+}
+
+.render-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.render-card {
+  overflow: hidden;
+  border: 1px solid #ded8cf;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.render-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  background: #111;
+}
+
+.render-meta {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.render-title {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.render-subtitle {
+  color: #717171;
+  font-size: 12px;
+}
+
+.render-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .post {
@@ -345,10 +422,23 @@ h1 {
       <div id="status" class="status">Ready</div>
     </div>
     <textarea id="jsonInput" class="editor" spellcheck="false" aria-label="Carousel JSON"></textarea>
+    <div class="uploads">
+      <div class="upload-row">
+        <label for="commonBackgroundInput">Common background image</label>
+        <input id="commonBackgroundInput" class="file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+      </div>
+      <div class="upload-row">
+        <label for="slideBackgroundInput">Background for selected slide</label>
+        <input id="slideBackgroundInput" class="file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+      </div>
+    </div>
     <div class="actions">
       <button id="generateButton" class="button" type="button">Generate</button>
       <button id="downloadZipButton" class="button secondary" type="button" disabled>Download ZIP</button>
       <button id="copyButton" class="button secondary" type="button" disabled>Copy current HTML</button>
+      <button id="renderCurrentButton" class="button" type="button" disabled>Render current PNG</button>
+      <button id="renderAllButton" class="button secondary" type="button" disabled>Render all PNGs</button>
+      <button id="downloadPngZipButton" class="button secondary" type="button" disabled>Download PNG ZIP</button>
     </div>
   </section>
 
@@ -367,6 +457,13 @@ h1 {
         <button id="downloadCurrentButton" class="button secondary" type="button" disabled>Download current</button>
       </div>
       <textarea id="htmlOutput" class="code-output" spellcheck="false" readonly></textarea>
+    </section>
+
+    <section class="rendered" aria-label="Rendered PNGs">
+      <div class="toolbar">
+        <h2>Rendered PNGs</h2>
+      </div>
+      <div id="renderedGrid" class="render-grid"></div>
     </section>
   </section>
 </main>
@@ -404,6 +501,9 @@ const sampleData = {
 
 let generatedFiles = [];
 let currentIndex = 0;
+let commonBackgroundDataUrl = "";
+let slideBackgroundDataUrls = [];
+let renderedImages = [];
 
 const jsonInput = document.querySelector("#jsonInput");
 const statusEl = document.querySelector("#status");
@@ -414,6 +514,12 @@ const generateButton = document.querySelector("#generateButton");
 const downloadZipButton = document.querySelector("#downloadZipButton");
 const downloadCurrentButton = document.querySelector("#downloadCurrentButton");
 const copyButton = document.querySelector("#copyButton");
+const commonBackgroundInput = document.querySelector("#commonBackgroundInput");
+const slideBackgroundInput = document.querySelector("#slideBackgroundInput");
+const renderCurrentButton = document.querySelector("#renderCurrentButton");
+const renderAllButton = document.querySelector("#renderAllButton");
+const downloadPngZipButton = document.querySelector("#downloadPngZipButton");
+const renderedGrid = document.querySelector("#renderedGrid");
 
 jsonInput.value = JSON.stringify(sampleData, null, 2);
 
@@ -421,8 +527,14 @@ generateButton.addEventListener("click", generate);
 downloadZipButton.addEventListener("click", downloadZip);
 downloadCurrentButton.addEventListener("click", downloadCurrent);
 copyButton.addEventListener("click", copyCurrent);
+renderCurrentButton.addEventListener("click", () => renderPng(currentIndex));
+renderAllButton.addEventListener("click", renderAllPngs);
+downloadPngZipButton.addEventListener("click", downloadPngZip);
+commonBackgroundInput.addEventListener("change", handleCommonBackground);
+slideBackgroundInput.addEventListener("change", handleSlideBackground);
 slideSelect.addEventListener("change", () => {
   currentIndex = Number(slideSelect.value);
+  slideBackgroundInput.value = "";
   updateCurrentOutput();
 });
 
@@ -435,18 +547,24 @@ function generate() {
       const fileName = `slide_${String(index + 1).padStart(2, "0")}.html`;
       return {
         fileName,
+        pngName: fileName.replace(/\.html$/, ".png"),
+        index,
         html: renderDocument(data, slide, index),
         preview: renderPost(data, slide, index)
       };
     });
+    renderedImages = renderedImages.filter(item => generatedFiles[item.index]);
     currentIndex = 0;
     renderPreview();
+    renderRenderedImages();
     updateCurrentOutput();
     setStatus(`Generated ${generatedFiles.length} slide(s)`);
     setEnabled(true);
   } catch (error) {
     generatedFiles = [];
+    renderedImages = [];
     previewGrid.innerHTML = "";
+    renderedGrid.innerHTML = "";
     slideSelect.innerHTML = "";
     htmlOutput.value = "";
     setEnabled(false);
@@ -519,6 +637,9 @@ function setEnabled(enabled) {
   downloadZipButton.disabled = !enabled;
   downloadCurrentButton.disabled = !enabled;
   copyButton.disabled = !enabled;
+  renderCurrentButton.disabled = !enabled;
+  renderAllButton.disabled = !enabled;
+  downloadPngZipButton.disabled = renderedImages.length === 0;
 }
 
 function renderDocument(data, slide, index) {
@@ -538,7 +659,7 @@ ${renderPost(data, slide, index)}
 }
 
 function renderPost(data, slide, index) {
-  const background = slide.background || data.background;
+  const background = getBackgroundForSlide(data, slide, index);
   const backgroundHtml = background
     ? `<img class="bg" src="${escapeAttr(background)}" alt="">`
     : `<div class="bg-fallback" aria-hidden="true"></div>`;
@@ -565,6 +686,214 @@ function renderPost(data, slide, index) {
   ${swipeHtml}
   ${handleHtml}
 </article>`;
+}
+
+function getBackgroundForSlide(data, slide, index) {
+  return slideBackgroundDataUrls[index] || commonBackgroundDataUrl || slide.background || data.background || "";
+}
+
+async function handleCommonBackground(event) {
+  try {
+    commonBackgroundDataUrl = await readImageAsDataUrl(event.target.files[0]);
+    generate();
+    setStatus("Common background loaded");
+  } catch (error) {
+    event.target.value = "";
+    setStatus(error.message, true);
+  }
+}
+
+async function handleSlideBackground(event) {
+  try {
+    const targetIndex = currentIndex;
+    slideBackgroundDataUrls[targetIndex] = await readImageAsDataUrl(event.target.files[0]);
+    generate();
+    currentIndex = Math.min(targetIndex, generatedFiles.length - 1);
+    updateCurrentOutput();
+    setStatus(`Background loaded for slide ${currentIndex + 1}`);
+  } catch (error) {
+    event.target.value = "";
+    setStatus(error.message, true);
+  }
+}
+
+function readImageAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      resolve("");
+      return;
+    }
+    if (!/^image\/(png|jpeg|webp|gif)$/.test(file.type)) {
+      reject(new Error("Use PNG, JPG, WebP, or GIF images."));
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      reject(new Error("Image upload must be 5MB or smaller."));
+      return;
+    }
+    const reader = new FileReader();
+    reader.addEventListener("load", () => resolve(String(reader.result || "")), { once: true });
+    reader.addEventListener("error", () => reject(new Error("Could not read image file.")), { once: true });
+    reader.readAsDataURL(file);
+  });
+}
+
+async function renderPng(index) {
+  const file = generatedFiles[index];
+  if (!file) {
+    return;
+  }
+
+  setRenderButtons(false);
+  setStatus(`Rendering ${file.pngName}...`);
+
+  try {
+    const result = await renderApi(file.html);
+    const item = {
+      index,
+      fileName: file.pngName,
+      html: file.html,
+      url: result.url,
+      createdAt: new Date().toLocaleString(),
+      renderKb: result.render_kb || 0
+    };
+    upsertRenderedImage(item);
+    renderRenderedImages();
+    setStatus(`Rendered ${file.pngName}`);
+  } catch (error) {
+    setStatus(`${file.pngName}: ${error.message}`, true);
+  } finally {
+    setRenderButtons(true);
+  }
+}
+
+async function renderAllPngs() {
+  if (generatedFiles.length === 0) {
+    return;
+  }
+
+  setRenderButtons(false);
+  try {
+    for (let index = 0; index < generatedFiles.length; index += 1) {
+      const file = generatedFiles[index];
+      setStatus(`Rendering ${index + 1}/${generatedFiles.length}: ${file.pngName}`);
+      const result = await renderApi(file.html);
+      upsertRenderedImage({
+        index,
+        fileName: file.pngName,
+        html: file.html,
+        url: result.url,
+        createdAt: new Date().toLocaleString(),
+        renderKb: result.render_kb || 0
+      });
+      renderRenderedImages();
+    }
+    setStatus(`Rendered ${generatedFiles.length} PNG(s)`);
+  } catch (error) {
+    setStatus(error.message, true);
+  } finally {
+    setRenderButtons(true);
+  }
+}
+
+async function renderApi(html) {
+  const response = await fetch("/api/render", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      html,
+      format: "png",
+      width: 1080,
+      height: 1920
+    })
+  });
+  const text = await response.text();
+  let json = {};
+  try {
+    json = text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error(`/api/render returned non-JSON. HTTP ${response.status}`);
+  }
+  if (!response.ok || json.error) {
+    throw new Error(json.error || `HTTP ${response.status}`);
+  }
+  return json;
+}
+
+function upsertRenderedImage(item) {
+  renderedImages = renderedImages.filter(existing => existing.index !== item.index);
+  renderedImages.push(item);
+  renderedImages.sort((a, b) => a.index - b.index);
+  downloadPngZipButton.disabled = renderedImages.length === 0;
+}
+
+function renderRenderedImages() {
+  if (renderedImages.length === 0) {
+    renderedGrid.innerHTML = "";
+    downloadPngZipButton.disabled = true;
+    return;
+  }
+
+  renderedGrid.innerHTML = renderedImages.map(item => {
+    const downloadUrl = `/api/download-image?url=${encodeURIComponent(item.url)}&filename=${encodeURIComponent(item.fileName)}`;
+    return `<article class="render-card">
+      <img src="${escapeAttr(item.url)}" alt="${escapeAttr(item.fileName)}">
+      <div class="render-meta">
+        <div class="render-title">${escapeHtml(item.fileName)}</div>
+        <div class="render-subtitle">${escapeHtml(item.createdAt)} / ${escapeHtml(item.renderKb)}KB HTML</div>
+        <div class="render-actions">
+          <button class="button secondary" type="button" data-render-index="${item.index}">Regenerate</button>
+          <a class="button secondary" href="${escapeAttr(downloadUrl)}">Download</a>
+        </div>
+      </div>
+    </article>`;
+  }).join("");
+
+  renderedGrid.querySelectorAll("[data-render-index]").forEach(button => {
+    button.addEventListener("click", () => renderPng(Number(button.dataset.renderIndex)));
+  });
+
+  downloadPngZipButton.disabled = false;
+}
+
+async function downloadPngZip() {
+  if (renderedImages.length === 0) {
+    return;
+  }
+
+  setStatus("Preparing PNG ZIP...");
+  const response = await fetch("/api/download-images-zip", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      filename: "carousel-images.zip",
+      items: renderedImages.map(item => ({
+        url: item.url,
+        filename: item.fileName
+      }))
+    })
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    let json = {};
+    try {
+      json = text ? JSON.parse(text) : {};
+    } catch {
+      // Ignore non-JSON ZIP errors.
+    }
+    setStatus(json.error || `PNG ZIP failed. HTTP ${response.status}`, true);
+    return;
+  }
+
+  downloadBlob("carousel-images.zip", await response.blob());
+  setStatus("Downloaded PNG ZIP");
+}
+
+function setRenderButtons(enabled) {
+  renderCurrentButton.disabled = !enabled || generatedFiles.length === 0;
+  renderAllButton.disabled = !enabled || generatedFiles.length === 0;
+  downloadPngZipButton.disabled = !enabled || renderedImages.length === 0;
 }
 
 function renderSlideCss() {
@@ -738,8 +1067,8 @@ function downloadZip() {
   files["slides.json"] = jsonInput.value;
   files["README.txt"] = [
     "Open each slide_XX.html directly in a browser.",
-    "Put referenced background images in the same folder as the HTML files.",
-    "Run `npm install` then `npm run export:png` from this tool folder to export PNGs."
+    "Uploaded backgrounds are embedded as data URLs.",
+    "Use the generator's Render current PNG / Render all PNGs buttons to create PNGs through MarkupGo."
   ].join("\n");
   downloadBlob("carousel-slides.zip", createZip(files));
 }

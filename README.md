@@ -1,19 +1,37 @@
 # JSON Carousel Generator
 
-Open `generator.html` in a browser, paste carousel JSON, and generate TikTok/Reels-style 9:16 slide HTML.
+Paste carousel JSON, preview TikTok/Reels-style 9:16 slides, and render PNGs through MarkupGo.
 
 ## Run locally
 
 ```bash
-npm install
 npm start
 ```
 
 Open `http://localhost:3000`.
 
+PNG rendering requires:
+
+```bash
+MARKUPGO_API_KEY=your_key_here
+```
+
+On Windows PowerShell:
+
+```powershell
+$env:MARKUPGO_API_KEY="your_key_here"
+npm start
+```
+
 ## Deploy to Railway
 
 Deploy this `carousel-generator` folder as a Node.js app.
+
+Set this Railway Variable:
+
+```text
+MARKUPGO_API_KEY=your_key_here
+```
 
 Railway will run:
 
@@ -21,7 +39,7 @@ Railway will run:
 npm start
 ```
 
-The app reads Railway's `PORT` environment variable and binds to `0.0.0.0`, so no extra port setting is needed. A health check is available at `/health`.
+The app reads Railway's `PORT` environment variable and binds to `0.0.0.0`. A health check is available at `/health`.
 
 ## JSON shape
 
@@ -44,24 +62,11 @@ The app reads Railway's `PORT` environment variable and binds to `0.0.0.0`, so n
 }
 ```
 
-`slide.background` overrides the root `background`. If no background is set, the generated HTML uses a built-in fallback background.
+Uploaded slide backgrounds override the common uploaded background. Uploaded backgrounds are embedded as data URLs before sending HTML to MarkupGo, so MarkupGo does not need access to local files.
 
-## PNG export
+## PNG rendering
 
-1. Use `generator.html` to download the ZIP.
-2. Extract `slide_XX.html` files into `carousel-generator/generated/`.
-3. Put referenced background images in the same folder.
-4. Run:
-
-```bash
-npm install
-npm run export:png
-```
-
-If Playwright says Chromium is missing, run:
-
-```bash
-npx playwright install chromium
-```
-
-PNGs are written to `carousel-generator/png/` at 1080 x 1920.
+- `Render current PNG` renders the selected slide.
+- `Render all PNGs` renders all slides sequentially.
+- Generated images appear as preview cards.
+- `Download PNG ZIP` downloads all rendered PNGs as `carousel-images.zip`.
