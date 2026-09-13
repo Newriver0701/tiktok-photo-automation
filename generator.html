@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JSON Carousel Generator</title>
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: #f4f1ec;
+  color: #171717;
+  font-family:
+    Inter,
+    "Noto Sans JP",
+    "Hiragino Kaku Gothic ProN",
+    "Yu Gothic",
+    Meiryo,
+    sans-serif;
+}
+
+body {
+  padding: 24px;
+}
+
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+.app {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(360px, 520px) 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.panel,
+.preview,
+.output {
+  background: #fffdfa;
+  border: 1px solid #ded8cf;
+  border-radius: 8px;
+}
+
+.panel {
+  position: sticky;
+  top: 24px;
+  padding: 18px;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.status {
+  min-height: 22px;
+  color: #717171;
+  font-size: 13px;
+}
+
+.status.error {
+  color: #b42318;
+}
+
+.editor {
+  display: block;
+  width: 100%;
+  min-height: 460px;
+  padding: 14px;
+  border: 1px solid #cfc7bc;
+  border-radius: 6px;
+  resize: vertical;
+  color: #111;
+  background: #fff;
+  font-family: Consolas, "SFMono-Regular", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.button {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #151515;
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: #151515;
+  color: #fff;
+  cursor: pointer;
+}
+
+.button.secondary {
+  background: #fffdfa;
+  color: #151515;
+  border-color: #cfc7bc;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.work {
+  display: grid;
+  gap: 18px;
+}
+
+.preview {
+  padding: 18px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.toolbar h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.select {
+  min-height: 36px;
+  border: 1px solid #cfc7bc;
+  border-radius: 6px;
+  background: #fff;
+  padding: 6px 10px;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.mini {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #000;
+  container-type: inline-size;
+}
+
+.mini .post {
+  position: absolute;
+  inset: 0;
+}
+
+.output {
+  padding: 18px;
+}
+
+.code-output {
+  display: block;
+  width: 100%;
+  min-height: 320px;
+  padding: 14px;
+  border: 1px solid #cfc7bc;
+  border-radius: 6px;
+  resize: vertical;
+  color: #111;
+  background: #fff;
+  font-family: Consolas, "SFMono-Regular", monospace;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.post {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+.bg,
+.bg-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.bg {
+  object-fit: cover;
+}
+
+.bg-fallback {
+  background:
+    radial-gradient(circle at 22% 20%, rgba(245, 245, 245, .22), transparent 28%),
+    linear-gradient(145deg, #0d1016 0%, #3f4653 48%, #14171d 100%);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(0,0,0,.22),
+      rgba(0,0,0,.07) 45%,
+      rgba(0,0,0,.30)
+    );
+}
+
+.content {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12cqw 5.8cqw 18cqw;
+}
+
+.story {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4.5cqw;
+}
+
+.bubble {
+  width: 100%;
+  text-align: center;
+  line-height: 1.55;
+  padding: 0 1cqw;
+}
+
+.bubble-text {
+  display: inline;
+  background: #fff;
+  color: #050505;
+  font-size: 5.7cqw;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.55;
+  padding: 1.6cqw 2.7cqw 1.9cqw;
+  border-radius: 2.2cqw;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  box-shadow:
+    0 2px 4px rgba(0,0,0,.14),
+    0 7px 16px rgba(0,0,0,.08);
+  overflow-wrap: anywhere;
+}
+
+.bubble-text.em {
+  background: #111;
+  color: #fff;
+}
+
+.kicker,
+.counter,
+.handle,
+.swipe {
+  position: absolute;
+  z-index: 3;
+  color: #fff;
+  font-weight: 900;
+}
+
+.kicker {
+  top: 5.2%;
+  left: 5%;
+  font-size: 2.5cqw;
+}
+
+.counter {
+  top: 4.6%;
+  right: 5%;
+  font-size: 2.9cqw;
+}
+
+.handle {
+  right: 4.5%;
+  bottom: 5.7%;
+  color: rgba(255,255,255,.9);
+  font-size: 2.3cqw;
+  font-weight: 700;
+}
+
+.swipe {
+  left: 50%;
+  bottom: 5.6%;
+  transform: translateX(-50%);
+  color: rgba(255,255,255,.78);
+  font-size: 2cqw;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  body {
+    padding: 14px;
+  }
+
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    position: static;
+  }
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <section class="panel" aria-label="JSON input">
+    <div class="brand">
+      <h1>JSON Carousel Generator</h1>
+      <div id="status" class="status">Ready</div>
+    </div>
+    <textarea id="jsonInput" class="editor" spellcheck="false" aria-label="Carousel JSON"></textarea>
+    <div class="actions">
+      <button id="generateButton" class="button" type="button">Generate</button>
+      <button id="downloadZipButton" class="button secondary" type="button" disabled>Download ZIP</button>
+      <button id="copyButton" class="button secondary" type="button" disabled>Copy current HTML</button>
+    </div>
+  </section>
+
+  <section class="work">
+    <section class="preview" aria-label="Preview">
+      <div class="toolbar">
+        <h2>Preview</h2>
+        <select id="slideSelect" class="select" aria-label="Current slide"></select>
+      </div>
+      <div id="previewGrid" class="preview-grid"></div>
+    </section>
+
+    <section class="output" aria-label="HTML output">
+      <div class="toolbar">
+        <h2>Current HTML</h2>
+        <button id="downloadCurrentButton" class="button secondary" type="button" disabled>Download current</button>
+      </div>
+      <textarea id="htmlOutput" class="code-output" spellcheck="false" readonly></textarea>
+    </section>
+  </section>
+</main>
+
+<script>
+const sampleData = {
+  handle: "@career_notes",
+  background: "background.jpg",
+  slides: [
+    {
+      kicker: "就活の話",
+      swipe: true,
+      blocks: [
+        { text: "就活で一番危ないのは、" },
+        { text: "答えを間違えることじゃない。", em: true },
+        { text: "正解を当てにいって、\n自分の話が消えること。" }
+      ]
+    },
+    {
+      blocks: [
+        { text: "「御社の理念に共感しました」" },
+        { text: "「成長できる環境だと感じました」" },
+        { text: "たぶん、みんな言ってる。", em: true }
+      ]
+    },
+    {
+      background: "background-03.jpg",
+      blocks: [
+        { text: "強い答えは、" },
+        { text: "きれいな言葉より、具体的な経験から出る。", em: true }
+      ]
+    }
+  ]
+};
+
+let generatedFiles = [];
+let currentIndex = 0;
+
+const jsonInput = document.querySelector("#jsonInput");
+const statusEl = document.querySelector("#status");
+const previewGrid = document.querySelector("#previewGrid");
+const htmlOutput = document.querySelector("#htmlOutput");
+const slideSelect = document.querySelector("#slideSelect");
+const generateButton = document.querySelector("#generateButton");
+const downloadZipButton = document.querySelector("#downloadZipButton");
+const downloadCurrentButton = document.querySelector("#downloadCurrentButton");
+const copyButton = document.querySelector("#copyButton");
+
+jsonInput.value = JSON.stringify(sampleData, null, 2);
+
+generateButton.addEventListener("click", generate);
+downloadZipButton.addEventListener("click", downloadZip);
+downloadCurrentButton.addEventListener("click", downloadCurrent);
+copyButton.addEventListener("click", copyCurrent);
+slideSelect.addEventListener("change", () => {
+  currentIndex = Number(slideSelect.value);
+  updateCurrentOutput();
+});
+
+generate();
+
+function generate() {
+  try {
+    const data = normalizeData(JSON.parse(jsonInput.value));
+    generatedFiles = data.slides.map((slide, index) => {
+      const fileName = `slide_${String(index + 1).padStart(2, "0")}.html`;
+      return {
+        fileName,
+        html: renderDocument(data, slide, index),
+        preview: renderPost(data, slide, index)
+      };
+    });
+    currentIndex = 0;
+    renderPreview();
+    updateCurrentOutput();
+    setStatus(`Generated ${generatedFiles.length} slide(s)`);
+    setEnabled(true);
+  } catch (error) {
+    generatedFiles = [];
+    previewGrid.innerHTML = "";
+    slideSelect.innerHTML = "";
+    htmlOutput.value = "";
+    setEnabled(false);
+    setStatus(error.message, true);
+  }
+}
+
+function normalizeData(data) {
+  if (!data || typeof data !== "object") {
+    throw new Error("JSON root must be an object.");
+  }
+
+  if (!Array.isArray(data.slides) || data.slides.length === 0) {
+    throw new Error("slides must be a non-empty array.");
+  }
+
+  return {
+    handle: typeof data.handle === "string" ? data.handle : "",
+    background: typeof data.background === "string" ? data.background : "",
+    slides: data.slides.map((slide, index) => {
+      if (!slide || typeof slide !== "object") {
+        throw new Error(`slides[${index}] must be an object.`);
+      }
+      if (!Array.isArray(slide.blocks) || slide.blocks.length === 0) {
+        throw new Error(`slides[${index}].blocks must be a non-empty array.`);
+      }
+      return {
+        kicker: typeof slide.kicker === "string" ? slide.kicker : "",
+        swipe: slide.swipe === true,
+        background: typeof slide.background === "string" ? slide.background : "",
+        blocks: slide.blocks.map((block, blockIndex) => {
+          if (!block || typeof block !== "object" || typeof block.text !== "string") {
+            throw new Error(`slides[${index}].blocks[${blockIndex}].text must be a string.`);
+          }
+          return {
+            text: block.text,
+            em: block.em === true
+          };
+        })
+      };
+    })
+  };
+}
+
+function renderPreview() {
+  previewGrid.innerHTML = generatedFiles
+    .map((file, index) => `<div class="mini" title="${escapeHtml(file.fileName)}">${file.preview}</div>`)
+    .join("");
+
+  slideSelect.innerHTML = generatedFiles
+    .map((file, index) => `<option value="${index}">${escapeHtml(file.fileName)}</option>`)
+    .join("");
+}
+
+function updateCurrentOutput() {
+  if (!generatedFiles[currentIndex]) {
+    htmlOutput.value = "";
+    return;
+  }
+  slideSelect.value = String(currentIndex);
+  htmlOutput.value = generatedFiles[currentIndex].html;
+}
+
+function setStatus(message, isError = false) {
+  statusEl.textContent = message;
+  statusEl.classList.toggle("error", isError);
+}
+
+function setEnabled(enabled) {
+  downloadZipButton.disabled = !enabled;
+  downloadCurrentButton.disabled = !enabled;
+  copyButton.disabled = !enabled;
+}
+
+function renderDocument(data, slide, index) {
+  return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(index + 1)}/${escapeHtml(data.slides.length)}</title>
+${renderSlideCss()}
+</head>
+<body>
+${renderPost(data, slide, index)}
+</body>
+</html>
+`;
+}
+
+function renderPost(data, slide, index) {
+  const background = slide.background || data.background;
+  const backgroundHtml = background
+    ? `<img class="bg" src="${escapeAttr(background)}" alt="">`
+    : `<div class="bg-fallback" aria-hidden="true"></div>`;
+  const kickerHtml = slide.kicker ? `<div class="kicker">${escapeHtml(slide.kicker)}</div>` : "";
+  const handleHtml = data.handle ? `<div class="handle">${escapeHtml(data.handle)}</div>` : "";
+  const swipeHtml = slide.swipe ? `<div class="swipe">&larr; swipe &rarr;</div>` : "";
+  const blocksHtml = slide.blocks
+    .map(block => {
+      const classes = block.em ? "bubble-text em" : "bubble-text";
+      return `<div class="bubble"><span class="${classes}">${escapeLines(block.text)}</span></div>`;
+    })
+    .join("\n        ");
+
+  return `<article class="post">
+  ${backgroundHtml}
+  <div class="overlay"></div>
+  ${kickerHtml}
+  <div class="content">
+    <div class="story">
+        ${blocksHtml}
+    </div>
+  </div>
+  <div class="counter">${index + 1}/${data.slides.length}</div>
+  ${swipeHtml}
+  ${handleHtml}
+</article>`;
+}
+
+function renderSlideCss() {
+  return `<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;900&display=swap');
+* { box-sizing: border-box; }
+html,
+body {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  background: #101114;
+  font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+}
+body {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+.post {
+  position: relative;
+  width: min(100vw, calc(100vh * 9 / 16));
+  height: min(100vh, calc(100vw * 16 / 9));
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  background: #000;
+  container-type: inline-size;
+}
+.bg,
+.bg-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.bg {
+  object-fit: cover;
+  object-position: center;
+}
+.bg-fallback {
+  background:
+    radial-gradient(circle at 22% 20%, rgba(245, 245, 245, .22), transparent 28%),
+    linear-gradient(145deg, #0d1016 0%, #3f4653 48%, #14171d 100%);
+}
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,.22), rgba(0,0,0,.07) 45%, rgba(0,0,0,.30));
+}
+.content {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12cqw 5.8cqw 18cqw;
+}
+.story {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4.5cqw;
+}
+.bubble {
+  width: 100%;
+  text-align: center;
+  line-height: 1.55;
+  padding: 0 1cqw;
+}
+.bubble-text {
+  display: inline;
+  background: #fff;
+  color: #050505;
+  font-size: 5.7cqw;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.55;
+  padding: 1.6cqw 2.7cqw 1.9cqw;
+  border-radius: 2.2cqw;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  box-shadow: 0 2px 4px rgba(0,0,0,.14), 0 7px 16px rgba(0,0,0,.08);
+  overflow-wrap: anywhere;
+}
+.bubble-text.em {
+  background: #111;
+  color: #fff;
+}
+.kicker,
+.counter,
+.handle,
+.swipe {
+  position: absolute;
+  z-index: 3;
+  color: #fff;
+  font-weight: 900;
+}
+.kicker {
+  top: 5.2%;
+  left: 5%;
+  font-size: 2.5cqw;
+}
+.counter {
+  top: 4.6%;
+  right: 5%;
+  font-size: 2.9cqw;
+}
+.handle {
+  right: 4.5%;
+  bottom: 5.7%;
+  color: rgba(255,255,255,.9);
+  font-size: 2.3cqw;
+  font-weight: 700;
+}
+.swipe {
+  left: 50%;
+  bottom: 5.6%;
+  transform: translateX(-50%);
+  color: rgba(255,255,255,.78);
+  font-size: 2cqw;
+  font-weight: 700;
+}
+</style>`;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value).replaceAll("`", "&#96;");
+}
+
+function escapeLines(value) {
+  return escapeHtml(value).replace(/\r\n|\r|\n/g, "<br>");
+}
+
+async function copyCurrent() {
+  if (!generatedFiles[currentIndex]) {
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(generatedFiles[currentIndex].html);
+    setStatus(`Copied ${generatedFiles[currentIndex].fileName}`);
+  } catch (error) {
+    htmlOutput.focus();
+    htmlOutput.select();
+    setStatus("Clipboard blocked. HTML is selected.");
+  }
+}
+
+function downloadCurrent() {
+  if (!generatedFiles[currentIndex]) {
+    return;
+  }
+  downloadBlob(
+    generatedFiles[currentIndex].fileName,
+    new Blob([generatedFiles[currentIndex].html], { type: "text/html;charset=utf-8" })
+  );
+}
+
+function downloadZip() {
+  const files = Object.fromEntries(generatedFiles.map(file => [file.fileName, file.html]));
+  files["slides.json"] = jsonInput.value;
+  files["README.txt"] = [
+    "Open each slide_XX.html directly in a browser.",
+    "Put referenced background images in the same folder as the HTML files.",
+    "Run `npm install` then `npm run export:png` from this tool folder to export PNGs."
+  ].join("\n");
+  downloadBlob("carousel-slides.zip", createZip(files));
+}
+
+function downloadBlob(fileName, blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function createZip(files) {
+  const localParts = [];
+  const centralParts = [];
+  let offset = 0;
+  const encoder = new TextEncoder();
+
+  Object.entries(files).forEach(([name, content]) => {
+    const nameBytes = encoder.encode(name);
+    const dataBytes = encoder.encode(content);
+    const crc = crc32(dataBytes);
+    const localHeader = concatBytes(
+      u32(0x04034b50), u16(20), u16(0), u16(0), u16(0), u16(0),
+      u32(crc), u32(dataBytes.length), u32(dataBytes.length),
+      u16(nameBytes.length), u16(0), nameBytes
+    );
+    localParts.push(localHeader, dataBytes);
+
+    const centralHeader = concatBytes(
+      u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), u16(0), u16(0),
+      u32(crc), u32(dataBytes.length), u32(dataBytes.length),
+      u16(nameBytes.length), u16(0), u16(0), u16(0), u16(0), u32(0),
+      u32(offset), nameBytes
+    );
+    centralParts.push(centralHeader);
+    offset += localHeader.length + dataBytes.length;
+  });
+
+  const centralSize = centralParts.reduce((sum, part) => sum + part.length, 0);
+  const endRecord = concatBytes(
+    u32(0x06054b50), u16(0), u16(0), u16(Object.keys(files).length), u16(Object.keys(files).length),
+    u32(centralSize), u32(offset), u16(0)
+  );
+
+  return new Blob([...localParts, ...centralParts, endRecord], { type: "application/zip" });
+}
+
+function u16(value) {
+  const bytes = new Uint8Array(2);
+  new DataView(bytes.buffer).setUint16(0, value, true);
+  return bytes;
+}
+
+function u32(value) {
+  const bytes = new Uint8Array(4);
+  new DataView(bytes.buffer).setUint32(0, value >>> 0, true);
+  return bytes;
+}
+
+function concatBytes(...parts) {
+  const total = parts.reduce((sum, part) => sum + part.length, 0);
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  parts.forEach(part => {
+    bytes.set(part, offset);
+    offset += part.length;
+  });
+  return bytes;
+}
+
+function crc32(bytes) {
+  let crc = -1;
+  for (let i = 0; i < bytes.length; i += 1) {
+    crc = (crc >>> 8) ^ crcTable[(crc ^ bytes[i]) & 0xff];
+  }
+  return (crc ^ -1) >>> 0;
+}
+
+const crcTable = (() => {
+  const table = new Uint32Array(256);
+  for (let i = 0; i < 256; i += 1) {
+    let value = i;
+    for (let j = 0; j < 8; j += 1) {
+      value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
+    }
+    table[i] = value >>> 0;
+  }
+  return table;
+})();
+</script>
+</body>
+</html>
