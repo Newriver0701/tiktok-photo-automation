@@ -274,6 +274,21 @@ h1 {
   gap: 8px;
 }
 
+.prompt-box {
+  display: block;
+  width: 100%;
+  min-height: 260px;
+  padding: 14px;
+  border: 1px solid #cfc7bc;
+  border-radius: 6px;
+  resize: vertical;
+  color: #111;
+  background: #fff;
+  font-family: Consolas, "SFMono-Regular", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .post {
   position: relative;
   width: 100%;
@@ -459,6 +474,14 @@ h1 {
       <textarea id="htmlOutput" class="code-output" spellcheck="false" readonly></textarea>
     </section>
 
+    <section class="output" aria-label="ChatGPT prompt">
+      <div class="toolbar">
+        <h2>ChatGPT Prompt</h2>
+        <button id="copyPromptButton" class="button secondary" type="button">Copy prompt</button>
+      </div>
+      <textarea id="promptOutput" class="prompt-box" spellcheck="false" readonly></textarea>
+    </section>
+
     <section class="rendered" aria-label="Rendered PNGs">
       <div class="toolbar">
         <h2>Rendered PNGs</h2>
@@ -470,11 +493,9 @@ h1 {
 
 <script>
 const sampleData = {
-  handle: "@career_notes",
   background: "background.jpg",
   slides: [
     {
-      kicker: "就活の話",
       swipe: true,
       blocks: [
         { text: "就活で一番危ないのは、" },
@@ -520,8 +541,11 @@ const renderCurrentButton = document.querySelector("#renderCurrentButton");
 const renderAllButton = document.querySelector("#renderAllButton");
 const downloadPngZipButton = document.querySelector("#downloadPngZipButton");
 const renderedGrid = document.querySelector("#renderedGrid");
+const promptOutput = document.querySelector("#promptOutput");
+const copyPromptButton = document.querySelector("#copyPromptButton");
 
 jsonInput.value = JSON.stringify(sampleData, null, 2);
+promptOutput.value = buildChatGptPrompt();
 
 generateButton.addEventListener("click", generate);
 downloadZipButton.addEventListener("click", downloadZip);
@@ -530,6 +554,7 @@ copyButton.addEventListener("click", copyCurrent);
 renderCurrentButton.addEventListener("click", () => renderPng(currentIndex));
 renderAllButton.addEventListener("click", renderAllPngs);
 downloadPngZipButton.addEventListener("click", downloadPngZip);
+copyPromptButton.addEventListener("click", copyPrompt);
 commonBackgroundInput.addEventListener("change", handleCommonBackground);
 slideBackgroundInput.addEventListener("change", handleSlideBackground);
 slideSelect.addEventListener("change", () => {
@@ -663,8 +688,6 @@ function renderPost(data, slide, index) {
   const backgroundHtml = background
     ? `<img class="bg" src="${escapeAttr(background)}" alt="">`
     : `<div class="bg-fallback" aria-hidden="true"></div>`;
-  const kickerHtml = slide.kicker ? `<div class="kicker">${escapeHtml(slide.kicker)}</div>` : "";
-  const handleHtml = data.handle ? `<div class="handle">${escapeHtml(data.handle)}</div>` : "";
   const swipeHtml = slide.swipe ? `<div class="swipe">&larr; swipe &rarr;</div>` : "";
   const blocksHtml = slide.blocks
     .map(block => {
@@ -676,15 +699,12 @@ function renderPost(data, slide, index) {
   return `<article class="post">
   ${backgroundHtml}
   <div class="overlay"></div>
-  ${kickerHtml}
   <div class="content">
     <div class="story">
         ${blocksHtml}
     </div>
   </div>
-  <div class="counter">${index + 1}/${data.slides.length}</div>
   ${swipeHtml}
-  ${handleHtml}
 </article>`;
 }
 
@@ -1050,6 +1070,61 @@ async function copyCurrent() {
     htmlOutput.select();
     setStatus("Clipboard blocked. HTML is selected.");
   }
+}
+
+async function copyPrompt() {
+  try {
+    await navigator.clipboard.writeText(promptOutput.value);
+    setStatus("Copied ChatGPT prompt");
+  } catch (error) {
+    promptOutput.focus();
+    promptOutput.select();
+    setStatus("Clipboard blocked. Prompt is selected.");
+  }
+}
+
+function buildChatGptPrompt() {
+  return `あなたはTikTok/Instagramリール用の縦型カルーセル投稿の構成作家です。
+
+以下のテーマから、読みやすく刺さるカルーセル投稿の文章を作り、指定JSON形式だけで出力してください。
+
+テーマ：
+ここにテーマを書く
+
+出力ルール：
+- JSONだけを返してください。
+- Markdown、コードフェンス、説明文、前置き、後書きは禁止です。
+- slidesは8枚にしてください。
+- 1枚あたりblocksは2〜4個にしてください。
+- 1ブロックは短く、スマホで読みやすい長さにしてください。
+- 強調したい1ブロックだけ em: true を付けてもOKです。
+- 改行したい場合は text 内に \\n を入れてください。
+- handle、kicker、counter、ページ番号は入れないでください。
+- backgroundは "background.jpg" にしてください。
+- 1枚目だけ swipe: true を付けてください。
+- 文章は自然な日本語にしてください。
+- 説教っぽくしすぎず、共感→気づき→具体→まとめの流れにしてください。
+
+必ずこのJSON形式で返してください：
+{
+  "background": "background.jpg",
+  "slides": [
+    {
+      "swipe": true,
+      "blocks": [
+        { "text": "1枚目の文章" },
+        { "text": "強調したい文章", "em": true },
+        { "text": "改行したい場合は\\nこう書く" }
+      ]
+    },
+    {
+      "blocks": [
+        { "text": "2枚目の文章" },
+        { "text": "2枚目の文章" }
+      ]
+    }
+  ]
+}`;
 }
 
 function downloadCurrent() {

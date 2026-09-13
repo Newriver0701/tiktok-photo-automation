@@ -45,11 +45,9 @@ The app reads Railway's `PORT` environment variable and binds to `0.0.0.0`. A he
 
 ```json
 {
-  "handle": "@your_account",
   "background": "background.jpg",
   "slides": [
     {
-      "kicker": "就活の話",
       "swipe": true,
       "background": "optional-slide-background.jpg",
       "blocks": [
@@ -70,3 +68,51 @@ Uploaded slide backgrounds override the common uploaded background. Uploaded bac
 - `Render all PNGs` renders all slides sequentially.
 - Generated images appear as preview cards.
 - `Download PNG ZIP` downloads all rendered PNGs as `carousel-images.zip`.
+
+## Prompt for ChatGPT
+
+Copy this into ChatGPT when you want it to create the JSON text:
+
+```text
+あなたはTikTok/Instagramリール用の縦型カルーセル投稿の構成作家です。
+
+以下のテーマから、読みやすく刺さるカルーセル投稿の文章を作り、指定JSON形式だけで出力してください。
+
+テーマ：
+ここにテーマを書く
+
+出力ルール：
+- JSONだけを返してください。
+- Markdown、コードフェンス、説明文、前置き、後書きは禁止です。
+- slidesは8枚にしてください。
+- 1枚あたりblocksは2〜4個にしてください。
+- 1ブロックは短く、スマホで読みやすい長さにしてください。
+- 強調したい1ブロックだけ em: true を付けてもOKです。
+- 改行したい場合は text 内に \n を入れてください。
+- handle、kicker、counter、ページ番号は入れないでください。
+- backgroundは "background.jpg" にしてください。
+- 1枚目だけ swipe: true を付けてください。
+- 文章は自然な日本語にしてください。
+- 説教っぽくしすぎず、共感→気づき→具体→まとめの流れにしてください。
+
+必ずこのJSON形式で返してください：
+{
+  "background": "background.jpg",
+  "slides": [
+    {
+      "swipe": true,
+      "blocks": [
+        { "text": "1枚目の文章" },
+        { "text": "強調したい文章", "em": true },
+        { "text": "改行したい場合は\nこう書く" }
+      ]
+    },
+    {
+      "blocks": [
+        { "text": "2枚目の文章" },
+        { "text": "2枚目の文章" }
+      ]
+    }
+  ]
+}
+```
