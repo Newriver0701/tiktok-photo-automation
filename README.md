@@ -69,6 +69,13 @@ Uploaded slide backgrounds override the common uploaded background. Uploaded bac
 - Generated images appear as preview cards.
 - `Download PNG ZIP` downloads all rendered PNGs as `carousel-images.zip`.
 
+## Modes
+
+- `通常`: Short, punchy carousel text.
+- `文章多め`: Still 8 slides, but uses smaller text and tighter spacing so each slide can include more explanation, examples, and nuance.
+
+The `文章多め` mode adds `"mode": "dense"` to the JSON. The same mode also changes the copy prompt shown in the app.
+
 ## Prompt for ChatGPT
 
 Copy this into ChatGPT when you want it to create the JSON text:

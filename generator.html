@@ -83,6 +83,29 @@ h1 {
   color: #b42318;
 }
 
+.mode-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mode-tab {
+  min-height: 38px;
+  border: 1px solid #cfc7bc;
+  border-radius: 6px;
+  background: #fffdfa;
+  color: #25221d;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.mode-tab.active {
+  border-color: #151515;
+  background: #151515;
+  color: #fff;
+}
+
 .editor {
   display: block;
   width: 100%;
@@ -375,6 +398,21 @@ h1 {
   color: #fff;
 }
 
+.post.dense .content {
+  padding: 9.5cqw 5.1cqw 13.5cqw;
+}
+
+.post.dense .story {
+  gap: 2.65cqw;
+}
+
+.post.dense .bubble-text {
+  font-size: 4.2cqw;
+  line-height: 1.48;
+  padding: 1.15cqw 2.05cqw 1.4cqw;
+  border-radius: 1.65cqw;
+}
+
 .kicker,
 .counter,
 .handle,
@@ -436,6 +474,10 @@ h1 {
       <h1>JSON Carousel Generator</h1>
       <div id="status" class="status">Ready</div>
     </div>
+    <div class="mode-tabs" role="tablist" aria-label="Generator mode">
+      <button id="normalModeButton" class="mode-tab active" type="button">通常</button>
+      <button id="denseModeButton" class="mode-tab" type="button">文章多め</button>
+    </div>
     <textarea id="jsonInput" class="editor" spellcheck="false" aria-label="Carousel JSON"></textarea>
     <div class="uploads">
       <div class="upload-row">
@@ -492,7 +534,7 @@ h1 {
 </main>
 
 <script>
-const sampleData = {
+const normalSampleData = {
   background: "background.jpg",
   slides: [
     {
@@ -520,6 +562,79 @@ const sampleData = {
   ]
 };
 
+const denseSampleData = {
+  background: "background.jpg",
+  mode: "dense",
+  slides: [
+    {
+      swipe: true,
+      blocks: [
+        { text: "面接で差がつくのは、" },
+        { text: "すごい経験を話せる人じゃない。", em: true },
+        { text: "自分の経験から何を学び、\n次にどう活かすかまで話せる人。" },
+        { text: "ここが浅いと、どれだけ頑張った話でも\nただの思い出で終わってしまう。" }
+      ]
+    },
+    {
+      blocks: [
+        { text: "たとえば、アルバイトを頑張った話。"},
+        { text: "「売上に貢献しました」だけだと、\n正直かなり似た話に聞こえる。" },
+        { text: "大事なのは、なぜ動いたのか、\n何を見て判断したのか、\nどこで失敗したのか。" },
+        { text: "その内側が見えると、\n一気にその人の話になる。", em: true }
+      ]
+    },
+    {
+      blocks: [
+        { text: "自己PRは、長所発表じゃない。" },
+        { text: "企業が見ているのは、\nその強みが入社後に再現されるかどうか。" },
+        { text: "だから「責任感があります」で止めずに、\n責任感が出た場面、迷った場面、\n最後に選んだ行動まで入れる。" },
+        { text: "行動の流れで見せると強い。" }
+      ]
+    },
+    {
+      blocks: [
+        { text: "志望動機も同じ。" },
+        { text: "理念に共感、成長できる環境、\n人の良さに惹かれた。" },
+        { text: "これは悪くないけど、\n誰でも言える言葉になりやすい。" },
+        { text: "自分の経験と企業の特徴が\n一本の線でつながっているかが大事。", em: true }
+      ]
+    },
+    {
+      blocks: [
+        { text: "面接官が聞きたいのは、\n完璧な答えではない。" },
+        { text: "この人は何を大切にして、\nどんな状況でどう考えるのか。" },
+        { text: "そこが見えると、\n多少言葉が整っていなくても印象に残る。" },
+        { text: "きれいな回答より、考えた跡。" }
+      ]
+    },
+    {
+      blocks: [
+        { text: "逆に、落ちやすい答えは\n全部が正しそうに聞こえる答え。" },
+        { text: "弱みもなく、迷いもなく、\n全部うまくいった話はリアルさが薄い。" },
+        { text: "少し失敗した話、悩んだ話、\n考えを変えた話のほうが信頼されることもある。" },
+        { text: "人間味は、弱さではなく情報量。", em: true }
+      ]
+    },
+    {
+      blocks: [
+        { text: "だから準備するときは、\n回答を丸暗記するより先に、" },
+        { text: "経験を分解する。" },
+        { text: "きっかけ、課題、行動、失敗、工夫、結果、\nそこから学んだこと。" },
+        { text: "この順番で整理すると、\nどんな質問にも応用しやすくなる。" }
+      ]
+    },
+    {
+      blocks: [
+        { text: "就活で一番もったいないのは、" },
+        { text: "本当は伝えたいことがあるのに、\nテンプレ回答に寄せすぎて薄くなること。" },
+        { text: "正解っぽさより、\n自分の経験から出た言葉を残す。" },
+        { text: "そこに、その人らしさが出る。", em: true }
+      ]
+    }
+  ]
+};
+
+let currentMode = "normal";
 let generatedFiles = [];
 let currentIndex = 0;
 let commonBackgroundDataUrl = "";
@@ -543,9 +658,10 @@ const downloadPngZipButton = document.querySelector("#downloadPngZipButton");
 const renderedGrid = document.querySelector("#renderedGrid");
 const promptOutput = document.querySelector("#promptOutput");
 const copyPromptButton = document.querySelector("#copyPromptButton");
+const normalModeButton = document.querySelector("#normalModeButton");
+const denseModeButton = document.querySelector("#denseModeButton");
 
-jsonInput.value = JSON.stringify(sampleData, null, 2);
-promptOutput.value = buildChatGptPrompt();
+applyMode("normal");
 
 generateButton.addEventListener("click", generate);
 downloadZipButton.addEventListener("click", downloadZip);
@@ -555,6 +671,8 @@ renderCurrentButton.addEventListener("click", () => renderPng(currentIndex));
 renderAllButton.addEventListener("click", renderAllPngs);
 downloadPngZipButton.addEventListener("click", downloadPngZip);
 copyPromptButton.addEventListener("click", copyPrompt);
+normalModeButton.addEventListener("click", () => applyMode("normal"));
+denseModeButton.addEventListener("click", () => applyMode("dense"));
 commonBackgroundInput.addEventListener("change", handleCommonBackground);
 slideBackgroundInput.addEventListener("change", handleSlideBackground);
 slideSelect.addEventListener("change", () => {
@@ -565,9 +683,20 @@ slideSelect.addEventListener("change", () => {
 
 generate();
 
+function applyMode(mode) {
+  currentMode = mode === "dense" ? "dense" : "normal";
+  normalModeButton.classList.toggle("active", currentMode === "normal");
+  denseModeButton.classList.toggle("active", currentMode === "dense");
+  jsonInput.value = JSON.stringify(currentMode === "dense" ? denseSampleData : normalSampleData, null, 2);
+  promptOutput.value = buildChatGptPrompt(currentMode);
+  renderedImages = [];
+  generate();
+}
+
 function generate() {
   try {
     const data = normalizeData(JSON.parse(jsonInput.value));
+    data.mode = data.mode || currentMode;
     generatedFiles = data.slides.map((slide, index) => {
       const fileName = `slide_${String(index + 1).padStart(2, "0")}.html`;
       return {
@@ -609,6 +738,7 @@ function normalizeData(data) {
   return {
     handle: typeof data.handle === "string" ? data.handle : "",
     background: typeof data.background === "string" ? data.background : "",
+    mode: data.mode === "dense" ? "dense" : "",
     slides: data.slides.map((slide, index) => {
       if (!slide || typeof slide !== "object") {
         throw new Error(`slides[${index}] must be an object.`);
@@ -696,7 +826,9 @@ function renderPost(data, slide, index) {
     })
     .join("\n        ");
 
-  return `<article class="post">
+  const postClass = data.mode === "dense" ? "post dense" : "post";
+
+  return `<article class="${postClass}">
   ${backgroundHtml}
   <div class="overlay"></div>
   <div class="content">
@@ -1004,6 +1136,18 @@ body {
   background: #111;
   color: #fff;
 }
+.post.dense .content {
+  padding: 9.5cqw 5.1cqw 13.5cqw;
+}
+.post.dense .story {
+  gap: 2.65cqw;
+}
+.post.dense .bubble-text {
+  font-size: 4.2cqw;
+  line-height: 1.48;
+  padding: 1.15cqw 2.05cqw 1.4cqw;
+  border-radius: 1.65cqw;
+}
 .kicker,
 .counter,
 .handle,
@@ -1083,7 +1227,60 @@ async function copyPrompt() {
   }
 }
 
-function buildChatGptPrompt() {
+function buildChatGptPrompt(mode = "normal") {
+  if (mode === "dense") {
+    return `あなたはTikTok/Instagramリール用の縦型カルーセル投稿の構成作家です。
+
+以下のテーマから、8枚固定の「文章量多め」カルーセル投稿を作り、指定JSON形式だけで出力してください。
+
+テーマ：
+ここにテーマを書く
+
+出力ルール：
+- JSONだけを返してください。
+- Markdown、コードフェンス、説明文、前置き、後書きは禁止です。
+- slidesは必ず8枚にしてください。
+- rootに "mode": "dense" を入れてください。
+- 1枚あたりblocksは3〜5個にしてください。
+- 1ブロックは1〜2文まで。長すぎる1文より、短いブロックを複数に分けてください。
+- 通常より文字が小さいテンプレで表示する前提なので、具体例・理由・補足をしっかり入れてください。
+- ただし1枚の中で話題を増やしすぎず、「1枚1テーマ」で深掘りしてください。
+- 各スライドは「結論 → 理由 → 具体例/注意点 → 一言まとめ」のように情報量を持たせてください。
+- 強調したい1ブロックだけ em: true を付けてもOKです。毎枚つけなくてもOKです。
+- 改行したい場合は text 内に \\n を入れてください。
+- handle、kicker、counter、ページ番号は入れないでください。
+- backgroundは "background.jpg" にしてください。
+- 1枚目だけ swipe: true を付けてください。
+- 文章は自然な日本語にしてください。
+- 凡庸な精神論だけにせず、読者が「それ自分のことかも」と思う具体性を入れてください。
+- 最後の8枚目は、保存したくなるまとめにしてください。
+
+必ずこのJSON形式で返してください：
+{
+  "background": "background.jpg",
+  "mode": "dense",
+  "slides": [
+    {
+      "swipe": true,
+      "blocks": [
+        { "text": "1枚目の結論" },
+        { "text": "その理由を少し詳しく書く" },
+        { "text": "具体例や注意点を書く" },
+        { "text": "重要な一文", "em": true }
+      ]
+    },
+    {
+      "blocks": [
+        { "text": "2枚目の結論" },
+        { "text": "理由や背景" },
+        { "text": "具体例" },
+        { "text": "一言まとめ" }
+      ]
+    }
+  ]
+}`;
+  }
+
   return `あなたはTikTok/Instagramリール用の縦型カルーセル投稿の構成作家です。
 
 以下のテーマから、読みやすく刺さるカルーセル投稿の文章を作り、指定JSON形式だけで出力してください。
