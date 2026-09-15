@@ -73,8 +73,48 @@ Uploaded slide backgrounds override the common uploaded background. Uploaded bac
 
 - `通常`: Short, punchy carousel text.
 - `文章多め`: Still 8 slides, but uses smaller text and tighter spacing so each slide can include more explanation, examples, and nuance.
+- `企業カード`: One company per slide, using a fixed center information card with a replaceable background image.
 
 The `文章多め` mode adds `"mode": "dense"` to the JSON. The same mode also changes the copy prompt shown in the app.
+The `企業カード` mode adds `"mode": "company"` and uses company-specific fields instead of `blocks`.
+
+## Company card JSON
+
+```json
+{
+  "mode": "company",
+  "background": "company-background.jpg",
+  "subImage": "company-sub.jpg",
+  "backgroundPosition": "center",
+  "slides": [
+    {
+      "company": "日立製作所",
+      "logo": "HITACHI",
+      "logoSub": "Inspire the Next",
+      "deadline": "9/18締切",
+      "salary": "934万円",
+      "holiday": "125日",
+      "overtime": "20.6h",
+      "metricsNote": "2024年度実績",
+      "points": [
+        "社会インフラ・デジタル分野で社会課題の解決に貢献",
+        "グローバルに事業を展開",
+        "研修制度・キャリア支援が充実"
+      ],
+      "fit": [
+        "社会課題の解決に関わりたい人",
+        "大きな組織で専門性を伸ばしたい人"
+      ],
+      "unfit": [
+        "短期的な成果や裁量だけを最優先したい人",
+        "特定業務だけにこだわりたい人"
+      ]
+    }
+  ]
+}
+```
+
+For company cards, the common uploaded background still overrides `background`, and selected slide uploads override both. `slide.background`, `slide.backgroundPosition`, `slide.subImage`, and `slide.logoImage` can be used when a specific slide needs different media.
 
 ## Prompt for ChatGPT
 

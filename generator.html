@@ -85,7 +85,7 @@ h1 {
 
 .mode-tabs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin-bottom: 12px;
 }
@@ -452,6 +452,158 @@ h1 {
   font-weight: 700;
 }
 
+.company-post {
+  color: #111;
+  background: #d8e5ec;
+}
+
+.company-bg,
+.company-bg-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.company-bg {
+  object-fit: cover;
+}
+
+.company-bg-fallback {
+  background:
+    linear-gradient(180deg, rgba(92, 169, 216, .88) 0%, rgba(206, 220, 226, .84) 48%, rgba(158, 166, 168, .86) 100%),
+    repeating-linear-gradient(90deg, transparent 0 14cqw, rgba(26, 51, 62, .18) 14cqw 14.35cqw);
+}
+
+.company-bg-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(255,255,255,.05);
+}
+
+.company-small-photo {
+  position: absolute;
+  z-index: 3;
+  left: -1.2cqw;
+  top: 3.1%;
+  width: 29.5cqw;
+  height: 31%;
+  object-fit: cover;
+  border: .42cqw solid #101010;
+  border-left: 0;
+  border-radius: 0 3.8cqw 3.8cqw 0;
+  box-shadow: 0 1.3cqw 3.5cqw rgba(0,0,0,.24);
+}
+
+.company-card {
+  position: absolute;
+  z-index: 4;
+  left: 20.5cqw;
+  top: 18.5%;
+  width: 69cqw;
+  min-height: 61%;
+  padding: 7.6cqw 3.6cqw 4.3cqw;
+  background: #fff;
+  border: .42cqw solid #151515;
+  border-radius: 2.2cqw;
+  box-shadow: 0 1.6cqw 3.4cqw rgba(0,0,0,.20);
+}
+
+.company-logo-box {
+  display: grid;
+  place-items: center;
+  min-height: 10.2cqw;
+  margin-bottom: 3.3cqw;
+  border: .28cqw solid #151515;
+  border-radius: 1cqw;
+  padding: 1.5cqw;
+  text-align: center;
+}
+
+.company-logo-image {
+  display: block;
+  max-width: 100%;
+  max-height: 8.8cqw;
+  object-fit: contain;
+}
+
+.company-logo {
+  font-size: 6.1cqw;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.company-logo-sub {
+  margin-top: .8cqw;
+  font-size: 1.55cqw;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.company-name {
+  margin-bottom: 2.4cqw;
+  font-size: 3.7cqw;
+  line-height: 1.24;
+  font-weight: 900;
+}
+
+.company-deadline {
+  display: inline-flex;
+  align-items: center;
+  min-height: 6.4cqw;
+  margin-bottom: 2.2cqw;
+  padding: .8cqw 2.4cqw;
+  border-radius: 1.2cqw;
+  background: #f0df4d;
+  color: #111;
+  font-size: 3.55cqw;
+  line-height: 1.1;
+  font-weight: 900;
+}
+
+.company-metrics {
+  margin-bottom: .8cqw;
+  font-size: 2.25cqw;
+  line-height: 1.35;
+  font-weight: 900;
+}
+
+.company-note {
+  margin-bottom: 2.6cqw;
+  color: #4d4d4d;
+  font-size: 1.65cqw;
+  line-height: 1.3;
+  font-weight: 800;
+}
+
+.company-section-title {
+  margin: 2.2cqw 0 1.15cqw;
+  padding-bottom: .45cqw;
+  border-bottom: .28cqw solid #151515;
+  font-size: 2.75cqw;
+  line-height: 1.2;
+  font-weight: 900;
+}
+
+.company-points {
+  margin: 0;
+  padding-left: 3.1cqw;
+}
+
+.company-points li,
+.company-fit {
+  margin: 0 0 .75cqw;
+  font-size: 2.02cqw;
+  line-height: 1.38;
+  font-weight: 800;
+}
+
+.company-fit {
+  padding-left: .3cqw;
+}
+
 @media (max-width: 900px) {
   body {
     padding: 14px;
@@ -477,6 +629,7 @@ h1 {
     <div class="mode-tabs" role="tablist" aria-label="Generator mode">
       <button id="normalModeButton" class="mode-tab active" type="button">通常</button>
       <button id="denseModeButton" class="mode-tab" type="button">文章多め</button>
+      <button id="companyModeButton" class="mode-tab" type="button">企業カード</button>
     </div>
     <textarea id="jsonInput" class="editor" spellcheck="false" aria-label="Carousel JSON"></textarea>
     <div class="uploads">
@@ -634,6 +787,61 @@ const denseSampleData = {
   ]
 };
 
+const companySampleData = {
+  mode: "company",
+  background: "company-background.jpg",
+  subImage: "company-sub.jpg",
+  backgroundPosition: "center",
+  slides: [
+    {
+      company: "日立製作所",
+      logo: "HITACHI",
+      logoSub: "Inspire the Next",
+      deadline: "9/18締切",
+      salary: "934万円",
+      holiday: "125日",
+      overtime: "20.6h",
+      metricsNote: "2024年度実績",
+      points: [
+        "社会インフラ・デジタル分野で社会課題の解決に貢献",
+        "グローバルに事業を展開",
+        "研修制度・キャリア支援が充実",
+        "配属領域が幅広く、事前の企業研究が重要"
+      ],
+      fit: [
+        "社会課題の解決に関わりたい人",
+        "大きな組織で長期的に専門性を伸ばしたい人"
+      ],
+      unfit: [
+        "短期的な成果や裁量だけを最優先したい人",
+        "特定業務だけにこだわりたい人"
+      ]
+    },
+    {
+      company: "ソニーグループ",
+      logo: "SONY",
+      deadline: "10/3締切",
+      salary: "要確認",
+      holiday: "要確認",
+      overtime: "要確認",
+      metricsNote: "最新情報は募集要項で確認",
+      points: [
+        "エンタメ・半導体・金融など事業領域が広い",
+        "職種別の志望理由を深く作る必要がある",
+        "自分の興味と事業の接点を具体化すると強い"
+      ],
+      fit: [
+        "好きな領域を仕事に接続して語れる人",
+        "変化の大きい環境で学び続けたい人"
+      ],
+      unfit: [
+        "ブランドイメージだけで志望している人",
+        "配属や事業理解を曖昧にしたまま進めたい人"
+      ]
+    }
+  ]
+};
+
 let currentMode = "normal";
 let generatedFiles = [];
 let currentIndex = 0;
@@ -660,6 +868,7 @@ const promptOutput = document.querySelector("#promptOutput");
 const copyPromptButton = document.querySelector("#copyPromptButton");
 const normalModeButton = document.querySelector("#normalModeButton");
 const denseModeButton = document.querySelector("#denseModeButton");
+const companyModeButton = document.querySelector("#companyModeButton");
 
 applyMode("normal");
 
@@ -673,6 +882,7 @@ downloadPngZipButton.addEventListener("click", downloadPngZip);
 copyPromptButton.addEventListener("click", copyPrompt);
 normalModeButton.addEventListener("click", () => applyMode("normal"));
 denseModeButton.addEventListener("click", () => applyMode("dense"));
+companyModeButton.addEventListener("click", () => applyMode("company"));
 commonBackgroundInput.addEventListener("change", handleCommonBackground);
 slideBackgroundInput.addEventListener("change", handleSlideBackground);
 slideSelect.addEventListener("change", () => {
@@ -684,10 +894,16 @@ slideSelect.addEventListener("change", () => {
 generate();
 
 function applyMode(mode) {
-  currentMode = mode === "dense" ? "dense" : "normal";
+  currentMode = ["normal", "dense", "company"].includes(mode) ? mode : "normal";
   normalModeButton.classList.toggle("active", currentMode === "normal");
   denseModeButton.classList.toggle("active", currentMode === "dense");
-  jsonInput.value = JSON.stringify(currentMode === "dense" ? denseSampleData : normalSampleData, null, 2);
+  companyModeButton.classList.toggle("active", currentMode === "company");
+  const samples = {
+    normal: normalSampleData,
+    dense: denseSampleData,
+    company: companySampleData
+  };
+  jsonInput.value = JSON.stringify(samples[currentMode], null, 2);
   promptOutput.value = buildChatGptPrompt(currentMode);
   renderedImages = [];
   generate();
@@ -695,7 +911,11 @@ function applyMode(mode) {
 
 function generate() {
   try {
-    const data = normalizeData(JSON.parse(jsonInput.value));
+    const rawData = JSON.parse(jsonInput.value);
+    const hasCompanySlides = rawData && Array.isArray(rawData.slides) && rawData.slides.some(slide => slide && typeof slide.company === "string");
+    const data = rawData && (rawData.mode === "company" || (currentMode === "company" && hasCompanySlides))
+      ? normalizeCompanyData(rawData)
+      : normalizeData(rawData);
     data.mode = data.mode || currentMode;
     generatedFiles = data.slides.map((slide, index) => {
       const fileName = `slide_${String(index + 1).padStart(2, "0")}.html`;
@@ -724,6 +944,57 @@ function generate() {
     setEnabled(false);
     setStatus(error.message, true);
   }
+}
+
+function normalizeStringList(value, fallback = []) {
+  if (!Array.isArray(value)) {
+    return fallback;
+  }
+  return value
+    .filter(item => typeof item === "string" && item.trim())
+    .map(item => item.trim());
+}
+
+function normalizeCompanyData(data) {
+  if (!data || typeof data !== "object") {
+    throw new Error("JSON root must be an object.");
+  }
+
+  if (!Array.isArray(data.slides) || data.slides.length === 0) {
+    throw new Error("slides must be a non-empty array.");
+  }
+
+  return {
+    mode: "company",
+    background: typeof data.background === "string" ? data.background : "",
+    backgroundPosition: typeof data.backgroundPosition === "string" ? data.backgroundPosition : "center",
+    subImage: typeof data.subImage === "string" ? data.subImage : "",
+    slides: data.slides.map((slide, index) => {
+      if (!slide || typeof slide !== "object") {
+        throw new Error(`slides[${index}] must be an object.`);
+      }
+      if (typeof slide.company !== "string" || !slide.company.trim()) {
+        throw new Error(`slides[${index}].company must be a non-empty string.`);
+      }
+      return {
+        company: slide.company.trim(),
+        background: typeof slide.background === "string" ? slide.background : "",
+        backgroundPosition: typeof slide.backgroundPosition === "string" ? slide.backgroundPosition : "",
+        subImage: typeof slide.subImage === "string" ? slide.subImage : "",
+        logo: typeof slide.logo === "string" ? slide.logo : "",
+        logoSub: typeof slide.logoSub === "string" ? slide.logoSub : "",
+        logoImage: typeof slide.logoImage === "string" ? slide.logoImage : "",
+        deadline: typeof slide.deadline === "string" ? slide.deadline : "",
+        salary: typeof slide.salary === "string" ? slide.salary : "",
+        holiday: typeof slide.holiday === "string" ? slide.holiday : "",
+        overtime: typeof slide.overtime === "string" ? slide.overtime : "",
+        metricsNote: typeof slide.metricsNote === "string" ? slide.metricsNote : "",
+        points: normalizeStringList(slide.points),
+        fit: normalizeStringList(slide.fit),
+        unfit: normalizeStringList(slide.unfit)
+      };
+    })
+  };
 }
 
 function normalizeData(data) {
@@ -798,12 +1069,15 @@ function setEnabled(enabled) {
 }
 
 function renderDocument(data, slide, index) {
+  const title = data.mode === "company"
+    ? `${slide.company} / ${index + 1}`
+    : `${index + 1}/${data.slides.length}`;
   return `<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${escapeHtml(index + 1)}/${escapeHtml(data.slides.length)}</title>
+<title>${escapeHtml(title)}</title>
 ${renderSlideCss()}
 </head>
 <body>
@@ -814,6 +1088,10 @@ ${renderPost(data, slide, index)}
 }
 
 function renderPost(data, slide, index) {
+  if (data.mode === "company") {
+    return renderCompanyPost(data, slide, index);
+  }
+
   const background = getBackgroundForSlide(data, slide, index);
   const backgroundHtml = background
     ? `<img class="bg" src="${escapeAttr(background)}" alt="">`
@@ -838,6 +1116,56 @@ function renderPost(data, slide, index) {
   </div>
   ${swipeHtml}
 </article>`;
+}
+
+function renderCompanyPost(data, slide, index) {
+  const background = getBackgroundForSlide(data, slide, index);
+  const backgroundPosition = slide.backgroundPosition || data.backgroundPosition || "center";
+  const backgroundHtml = background
+    ? `<img class="company-bg" src="${escapeAttr(background)}" style="object-position:${escapeAttr(backgroundPosition)}" alt="">`
+    : `<div class="company-bg-fallback" aria-hidden="true"></div>`;
+  const subImage = slide.subImage || data.subImage || "";
+  const subImageHtml = subImage
+    ? `<img class="company-small-photo" src="${escapeAttr(subImage)}" alt="">`
+    : "";
+  const logoHtml = slide.logoImage
+    ? `<img class="company-logo-image" src="${escapeAttr(slide.logoImage)}" alt="${escapeAttr(slide.company)}">`
+    : `<div><div class="company-logo">${escapeHtml(slide.logo || slide.company)}</div>${slide.logoSub ? `<div class="company-logo-sub">${escapeHtml(slide.logoSub)}</div>` : ""}</div>`;
+  const metrics = [
+    slide.salary ? `年収：${slide.salary}` : "",
+    slide.holiday ? `休日：${slide.holiday}` : "",
+    slide.overtime ? `残業：${slide.overtime}` : ""
+  ].filter(Boolean).join("｜");
+  const pointsHtml = renderList(slide.points, "company-points");
+  const fitHtml = renderParagraphList(slide.fit, "company-fit");
+  const unfitHtml = renderParagraphList(slide.unfit, "company-fit");
+
+  return `<article class="post company-post">
+  ${backgroundHtml}
+  <div class="company-bg-shade"></div>
+  ${subImageHtml}
+  <section class="company-card">
+    <div class="company-logo-box">${logoHtml}</div>
+    <div class="company-name">🏛️ ${escapeHtml(slide.company)}</div>
+    ${slide.deadline ? `<div class="company-deadline">${escapeHtml(slide.deadline)}</div>` : ""}
+    ${metrics ? `<div class="company-metrics">${escapeHtml(metrics)}</div>` : ""}
+    ${slide.metricsNote ? `<div class="company-note">（${escapeHtml(slide.metricsNote)}）</div>` : ""}
+    ${pointsHtml ? `<div class="company-section-title">深掘りポイント</div>${pointsHtml}` : ""}
+    ${fitHtml ? `<div class="company-section-title">向いてる人</div>${fitHtml}` : ""}
+    ${unfitHtml ? `<div class="company-section-title">向いてない人</div>${unfitHtml}` : ""}
+  </section>
+</article>`;
+}
+
+function renderList(items, className) {
+  if (!items.length) {
+    return "";
+  }
+  return `<ul class="${className}">${items.map(item => `<li>${escapeLines(item)}</li>`).join("")}</ul>`;
+}
+
+function renderParagraphList(items, className) {
+  return items.map(item => `<p class="${className}">👉 ${escapeLines(item)}</p>`).join("");
 }
 
 function getBackgroundForSlide(data, slide, index) {
@@ -1182,6 +1510,139 @@ body {
   font-size: 2cqw;
   font-weight: 700;
 }
+.company-post {
+  color: #111;
+  background: #d8e5ec;
+}
+.company-bg,
+.company-bg-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.company-bg {
+  object-fit: cover;
+}
+.company-bg-fallback {
+  background:
+    linear-gradient(180deg, rgba(92, 169, 216, .88) 0%, rgba(206, 220, 226, .84) 48%, rgba(158, 166, 168, .86) 100%),
+    repeating-linear-gradient(90deg, transparent 0 14cqw, rgba(26, 51, 62, .18) 14cqw 14.35cqw);
+}
+.company-bg-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(255,255,255,.05);
+}
+.company-small-photo {
+  position: absolute;
+  z-index: 3;
+  left: -1.2cqw;
+  top: 3.1%;
+  width: 29.5cqw;
+  height: 31%;
+  object-fit: cover;
+  border: .42cqw solid #101010;
+  border-left: 0;
+  border-radius: 0 3.8cqw 3.8cqw 0;
+  box-shadow: 0 1.3cqw 3.5cqw rgba(0,0,0,.24);
+}
+.company-card {
+  position: absolute;
+  z-index: 4;
+  left: 20.5cqw;
+  top: 18.5%;
+  width: 69cqw;
+  min-height: 61%;
+  padding: 7.6cqw 3.6cqw 4.3cqw;
+  background: #fff;
+  border: .42cqw solid #151515;
+  border-radius: 2.2cqw;
+  box-shadow: 0 1.6cqw 3.4cqw rgba(0,0,0,.20);
+}
+.company-logo-box {
+  display: grid;
+  place-items: center;
+  min-height: 10.2cqw;
+  margin-bottom: 3.3cqw;
+  border: .28cqw solid #151515;
+  border-radius: 1cqw;
+  padding: 1.5cqw;
+  text-align: center;
+}
+.company-logo-image {
+  display: block;
+  max-width: 100%;
+  max-height: 8.8cqw;
+  object-fit: contain;
+}
+.company-logo {
+  font-size: 6.1cqw;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+.company-logo-sub {
+  margin-top: .8cqw;
+  font-size: 1.55cqw;
+  line-height: 1.2;
+  font-weight: 800;
+}
+.company-name {
+  margin-bottom: 2.4cqw;
+  font-size: 3.7cqw;
+  line-height: 1.24;
+  font-weight: 900;
+}
+.company-deadline {
+  display: inline-flex;
+  align-items: center;
+  min-height: 6.4cqw;
+  margin-bottom: 2.2cqw;
+  padding: .8cqw 2.4cqw;
+  border-radius: 1.2cqw;
+  background: #f0df4d;
+  color: #111;
+  font-size: 3.55cqw;
+  line-height: 1.1;
+  font-weight: 900;
+}
+.company-metrics {
+  margin-bottom: .8cqw;
+  font-size: 2.25cqw;
+  line-height: 1.35;
+  font-weight: 900;
+}
+.company-note {
+  margin-bottom: 2.6cqw;
+  color: #4d4d4d;
+  font-size: 1.65cqw;
+  line-height: 1.3;
+  font-weight: 800;
+}
+.company-section-title {
+  margin: 2.2cqw 0 1.15cqw;
+  padding-bottom: .45cqw;
+  border-bottom: .28cqw solid #151515;
+  font-size: 2.75cqw;
+  line-height: 1.2;
+  font-weight: 900;
+}
+.company-points {
+  margin: 0;
+  padding-left: 3.1cqw;
+}
+.company-points li,
+.company-fit {
+  margin: 0 0 .75cqw;
+  font-size: 2.02cqw;
+  line-height: 1.38;
+  font-weight: 800;
+}
+.company-fit {
+  padding-left: .3cqw;
+}
 </style>`;
 }
 
@@ -1228,6 +1689,64 @@ async function copyPrompt() {
 }
 
 function buildChatGptPrompt(mode = "normal") {
+  if (mode === "company") {
+    return `あなたは就活/転職向けInstagramカルーセルの編集者です。
+
+以下の企業リストから、中央に情報カードを置く「企業カード」形式のJSONだけを作ってください。
+
+企業リスト・テーマ：
+ここに企業名や業界を書く
+
+出力ルール：
+- JSONだけを返してください。
+- Markdown、コードフェンス、説明文、前置き、後書きは禁止です。
+- rootに "mode": "company" を入れてください。
+- slidesは8枚にしてください。
+- 1スライドにつき1社で作ってください。
+- backgroundは "company-background.jpg"、subImageは "company-sub.jpg" にしてください。
+- 会社ごとに背景を変えたい場合だけ slide.background を入れてください。
+- 会社ごとに左上画像を変えたい場合だけ slide.subImage を入れてください。
+- 事実情報はユーザーが与えた情報を優先してください。
+- 年収、休日、残業、締切が不明な場合は、推測で断定せず "要確認" と書いてください。
+- pointsは3〜5個にしてください。
+- fitは2個、unfitは2個にしてください。
+- 文章は短く、スマホのカード内で読み切れる長さにしてください。
+- 企業名、締切、数字、向いてる人/向いてない人が一目で分かるようにしてください。
+
+必ずこのJSON形式で返してください：
+{
+  "mode": "company",
+  "background": "company-background.jpg",
+  "subImage": "company-sub.jpg",
+  "backgroundPosition": "center",
+  "slides": [
+    {
+      "company": "企業名",
+      "logo": "LOGO",
+      "logoSub": "任意のサブコピー",
+      "deadline": "9/18締切",
+      "salary": "934万円",
+      "holiday": "125日",
+      "overtime": "20.6h",
+      "metricsNote": "2024年度実績",
+      "points": [
+        "深掘りポイント1",
+        "深掘りポイント2",
+        "深掘りポイント3"
+      ],
+      "fit": [
+        "向いてる人1",
+        "向いてる人2"
+      ],
+      "unfit": [
+        "向いてない人1",
+        "向いてない人2"
+      ]
+    }
+  ]
+}`;
+  }
+
   if (mode === "dense") {
     return `あなたはTikTok/Instagramリール用の縦型カルーセル投稿の構成作家です。
 
